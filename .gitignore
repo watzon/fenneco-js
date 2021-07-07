@@ -119,3 +119,6 @@ dist
 
 # editors
 .vscode/
+
+# session files
+fenneco/
