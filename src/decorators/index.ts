@@ -63,7 +63,12 @@ export interface Type<T> extends Function {
  
        const annotationInstance = new (DecoratorFactory as any)(...args);
        return function TypeDecorator(cls: Type<T>) {
-         if (typeFn) typeFn(cls, ...args);
+         if (typeFn) {
+           const val = typeFn(cls, ...args)
+           if (typeof val === 'function') {
+             cls = val as unknown as Type<T>
+           }
+          }
          // Use of Object.defineProperty is important since it creates non-enumerable property which
          // prevents the property is copied during subclassing.
          const annotations = cls.hasOwnProperty(ANNOTATIONS) ?

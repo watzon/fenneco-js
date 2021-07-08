@@ -1,16 +1,16 @@
-import { stringify } from "querystring";
-import { TelegramClient } from "telegram";
-import { NewMessage, NewMessageEvent } from "telegram/events";
-import { makeDecorator, Type, TypeDecorator } from ".";
-import { CommandArgument, CommandMeta } from "./Command";
-import { OnMessageMeta } from "./OnMessage";
-
-export const pluginRegistry: RegisteredPlugin[] = []
+import { inherits } from "util"
+import { TelegramClient } from "telegram"
+import { NewMessage, NewMessageEvent } from "telegram/events"
+import { EventBuilder, EventCommon } from "telegram/events/common"
+import { makeDecorator, Type, TypeDecorator } from "."
+import { CommandMeta } from "./Command"
+import { OnMessageMeta } from "./OnMessage"
+import { BotBase } from "./Bot"
 
 export interface PluginDecorator {
-    (obj?: PluginMeta): TypeDecorator;
+    (obj?: PluginMeta): TypeDecorator
 
-    new(obj?: PluginMeta): Plugin;
+    new(obj?: PluginMeta): TypeDecorator
 }
 
 export interface PluginMeta {
@@ -19,71 +19,83 @@ export interface PluginMeta {
     author?: string
 }
 
-export class RegisteredPlugin {
-    public static __commands__: [Function, CommandMeta][] = []
-    public static __messageListeners__: [Function, OnMessageMeta][] = []
+export class PluginBase {
+    private eventHandlers: Map<string, [CallableFunction, EventBuilder?]> = new Map()
+    private bot: BotBase
+    private client: TelegramClient
 
-    private plugin: any
-    private meta: PluginMeta
-
-    constructor(plugin: any, meta: PluginMeta) {
-        this.plugin = plugin
-        this.meta = meta
+    constructor(bot: BotBase) {
+        this.bot = bot
+        this.client = bot.client
     }
 
-    public async __handleCommands__(client: TelegramClient) {
-        for (const [func, meta] of RegisteredPlugin.__commands__) {
-            let {name, aliases, outgoing, prefix, args, ...rest}: CommandMeta = meta
-            
-            aliases = aliases ? aliases : []
-            aliases.unshift(name)
+    public __register__() {
 
-            outgoing = outgoing === undefined ? false : outgoing
-
-            const pattern = new RegExp(`^\\${prefix || '.'}${aliases.join('|')}(:?\s+(.*))?`)
-            const newMessage = new NewMessage({ pattern, outgoing, ...rest })
-            client.addEventHandler((event: NewMessageEvent) => {
-                const rest = event.message.patternMatch?.[1]
-                const [passedArgs, text] = args && rest ? this.parseArguments(args, rest) : [null, null]
-                func({client, event, args: passedArgs, text})
-            }, newMessage)
-        }
     }
 
-    public async __handleOnMessage__(client: TelegramClient) {
-        for (const [func, meta] of RegisteredPlugin.__messageListeners__) {
-            let {pattern, ...rest} = meta
-            pattern = typeof meta.pattern === 'string' ? new RegExp(meta.pattern) : meta.pattern
+    public __unregister__() {
 
-            const newMessage = new NewMessage({ pattern, ...rest })
-            client.addEventHandler((event: NewMessageEvent) => {
-                func({client, event})
-            }, newMessage)
-        }
     }
 
-    private parseArguments(args: [CommandArgument], pattern: string) {
-        const pieces = pattern.split(' ')
+    public async __onCommand__(functionName: string, meta: CommandMeta) {
+        let {name, aliases, outgoing, prefix, ...rest}: CommandMeta = meta
         
-        let parsedArgs = {}
-        let messageParts: string[] = []
+        aliases = aliases ? aliases : []
+        aliases.unshift(name)
 
-        for (const arg of args) {
-            switch (arg.type) {
-                case 'string':
-                    // const index = pieces.indexOf()
-                case 'number':
-                case 'boolean':
-            }
+        outgoing = outgoing === undefined ? false : outgoing
+
+        const pattern = new RegExp(`^\\${prefix || '.'}${aliases.join('|')}(:?\s+(.*))?`)
+        const event = new NewMessage({ pattern, outgoing, ...rest })
+        const callback = (event: NewMessageEvent) => {
+            const text = event.message.patternMatch?.[1]
+            this[functionName]({event, text})
         }
 
-        return [args, messageParts.join(' ')]
+        this.client.addEventHandler(callback, event)
+        this.eventHandlers.set(functionName, [callback, event])
     }
+
+    public async __onMessage__(client: TelegramClient) {
+        // for (const [func, meta] of PluginBase.__messageListeners__) {
+        //     let {pattern, ...rest} = meta
+        //     pattern = typeof meta.pattern === 'string' ? new RegExp(meta.pattern) : meta.pattern
+
+        //     const newMessage = new NewMessage({ pattern, ...rest })
+        //     client.addEventHandler((event: NewMessageEvent) => {
+        //         func({client, event})
+        //     }, newMessage)
+        // }
+    }
+
+    // private __parseArguments__(args: [CommandArgument], pattern: string) {
+    //     const pieces = pattern.split(' ')
+        
+    //     let parsedArgs = {}
+    //     let messageParts: string[] = []
+
+    //     for (const arg of args) {
+    //         switch (arg.type) {
+    //             case 'string':
+    //                 // const index = pieces.indexOf()
+    //             case 'number':
+    //             case 'boolean':
+    //         }
+    //     }
+
+    //     return [args, messageParts.join(' ')]
+    // }
 }
 
 export const Plugin: PluginDecorator = makeDecorator(
     'Plugin', (p: PluginMeta = {}) => {}, undefined, undefined,
     (type: Type<any>, meta: PluginMeta) => {
-        pluginRegistry.push(new RegisteredPlugin(new type(), meta))
+        const superClass = class type extends PluginBase {
+            constructor(bot: BotBase) {
+                super(bot)
+            }
+        }
+
+        return superClass
     }
 )

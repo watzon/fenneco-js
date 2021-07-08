@@ -1,8 +1,9 @@
-import { TelegramClient } from "telegram";
-import { NewMessageEvent } from "telegram/events";
-import { Plugin } from "../../decorators/Plugin";
-import { Command } from "../../decorators/Command";
+import { TelegramClient } from "telegram"
+import { NewMessageEvent } from "telegram/events"
+import { Plugin, PluginBase } from "../../decorators/Plugin"
+import { Command } from "../../decorators/Command"
 import { performance } from 'perf_hooks'
+import { BotBase } from "../../decorators/Bot"
 
 @Plugin({
     name: 'Ping',
@@ -12,10 +13,6 @@ export class Ping {
     @Command({
         name: 'ping',
         outgoing: true,
-        args: [{
-            type: 'boolean',
-            name: 'time',
-        }]
     })
     public async ping(client: TelegramClient, event: NewMessageEvent) {
         const start = performance.now()
