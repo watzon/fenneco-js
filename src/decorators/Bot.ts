@@ -1,5 +1,4 @@
 import prompts from 'prompts';
-import { inherits } from 'util'
 import { TelegramClient } from 'telegram';
 import { TelegramClientParams } from 'telegram/client/telegramBaseClient';
 import { Session, StringSession } from 'telegram/sessions';
@@ -29,13 +28,18 @@ export interface Authenticatable {
 }
 
 export class BotBase {
-    public client: TelegramClient
+    private _client: TelegramClient
 
-    public plugins: Map<typeof PluginBase, PluginBase>
+    public plugins: Map<typeof PluginBase, PluginBase> = new Map()
 
-    constructor(client: TelegramClient) {
-        this.client = client
-        this.plugins = new Map()
+    public get client() {
+        if (!this._client)
+            throw new Error(`Bot client has not been set. This shouldn't happen.`)
+        return this._client!
+    }
+
+    public set client(client: TelegramClient) {
+        this._client = client
     }
 
     addPlugin(plugin: typeof PluginBase) {
@@ -46,7 +50,6 @@ export class BotBase {
 
     removePlugin(plugin: typeof PluginBase) {
         const plug = this.plugins.get(plugin)
-        plug.__unregister__()
         this.plugins.delete(plugin)
     }
 
@@ -96,16 +99,13 @@ export const Bot: BotDecorator = makeDecorator(
         ...meta
     }),
     undefined, undefined,
-    async (type: Type<any>, meta: BotMeta) => {
-        const superClass = class type extends BotBase {
-            constructor(client: TelegramClient) {
-                super(client)
-            }
-        }
-        
+    async (type: Type<any>, meta: BotMeta) => {        
+        const superClass = class type extends BotBase {}
         
         const client = new TelegramClient(meta.session as Session, meta.apiId, meta.apiHash, meta.clientParams || {})
-        const bot = new superClass(client)
+        
+        const bot = new superClass()
+        bot.client = client
 
         for (const plugin of meta.plugins as Array<typeof PluginBase>) {
             bot.addPlugin(plugin)
@@ -114,9 +114,5 @@ export const Bot: BotDecorator = makeDecorator(
         if (meta.autostart || meta.autostart === undefined) {
             await bot.start()
         }
-
-        // await bootstrapPlugins(client)
-
-        return superClass
     }
 )

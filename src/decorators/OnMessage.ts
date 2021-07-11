@@ -1,6 +1,8 @@
 import { EntityLike } from "telegram/define";
+import { NewMessage, NewMessageEvent } from "telegram/events";
 import { makePropDecorator, Type } from ".";
-import { RegisteredPlugin } from "./Plugin";
+import { BotBase } from "./Bot";
+import { PluginBase } from "./Plugin";
 
 export interface OnMessageDecorator {
     (obj: OnMessageMeta): any
@@ -21,8 +23,17 @@ export interface OnMessageMeta {
 
 export const OnMessage: OnMessageDecorator = makePropDecorator(
     'OnMessage', undefined, undefined,
-    (type: Type<any>, name: string, meta: OnMessageMeta) => {
-        // @ts-ignore: Unreachable code error
-        RegisteredPlugin.__messageListeners__.push([type[name], meta])
+    (target: PluginBase, func: string, meta: OnMessageMeta) => {
+        let {pattern, ...rest} = meta
+        const regexp: RegExp = typeof meta.pattern === 'string' ? new RegExp(meta.pattern) : meta.pattern
+
+        const callback = (bot: BotBase) => {
+            const client = bot.client
+            client.addEventHandler((event: NewMessageEvent) => {
+                target[func]({bot, client, event})
+            }, new NewMessage({ pattern: regexp, ...rest }))
+        }
+
+        PluginBase.__register__(target.constructor, callback)
     }
 )

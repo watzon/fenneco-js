@@ -6,7 +6,9 @@ import { Ping } from './plugins/utils'
 
 try {
   require('dotenv').config()
-} catch (e: any) {}
+} catch (e: any) {
+  console.log(e)
+}
 
 @Bot({
   apiId: Number(process.env.API_ID!),
