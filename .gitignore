@@ -117,8 +117,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# editors
-.vscode/
-
 # session files
 fenneco/
