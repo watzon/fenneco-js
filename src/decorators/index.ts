@@ -38,6 +38,11 @@ export interface Type<T> extends Function {
    // see https://github.com/angular/angular/issues/3379#issuecomment-126169417
    (target: Object, propertyKey?: string|symbol, parameterIndex?: number): void;
  }
+
+ export interface ParamDecoratorFactory<T> {
+   name: string
+   args: T
+ }
  
  export const ANNOTATIONS = '__annotations__';
  export const PARAMETERS = '__parameters__';
@@ -87,7 +92,7 @@ export interface Type<T> extends Function {
        DecoratorFactory.prototype = Object.create(parentClass.prototype);
      }
  
-     DecoratorFactory.prototype.ngMetadataName = name;
+     DecoratorFactory.prototype.metadataName = name;
      (DecoratorFactory as any).annotationCls = DecoratorFactory;
      return DecoratorFactory as any;
    });
@@ -119,27 +124,32 @@ export interface Type<T> extends Function {
        (<any>ParamDecorator).annotation = annotationInstance;
        return ParamDecorator;
  
-       function ParamDecorator(cls: any, unusedKey: any, index: number): any {
+       function ParamDecorator(cls: any, methodName: any, index: number): any {
          // Use of Object.defineProperty is important since it creates non-enumerable property which
          // prevents the property is copied during subclassing.
          const parameters = cls.hasOwnProperty(PARAMETERS) ?
              (cls as any)[PARAMETERS] :
-             Object.defineProperty(cls, PARAMETERS, {value: []})[PARAMETERS];
+             Object.defineProperty(cls, PARAMETERS, {value: {}})[PARAMETERS];
  
+        if (!parameters[methodName]) {
+          parameters[methodName] = []
+        }
+
          // there might be gaps if some in between parameters do not have annotations.
          // we pad with nulls.
-         while (parameters.length <= index) {
-           parameters.push(null);
+         while (parameters[methodName].length <= index) {
+           parameters[methodName].push(null);
          }
  
-         (parameters[index] = parameters[index] || []).push(annotationInstance);
+         parameters[methodName][index] = annotationInstance
+
          return cls;
        }
      }
      if (parentClass) {
        ParamDecoratorFactory.prototype = Object.create(parentClass.prototype);
      }
-     ParamDecoratorFactory.prototype.ngMetadataName = name;
+     ParamDecoratorFactory.prototype.metadataName = name;
      (<any>ParamDecoratorFactory).annotationCls = ParamDecoratorFactory;
      return ParamDecoratorFactory;
    });
@@ -179,7 +189,7 @@ export interface Type<T> extends Function {
        PropDecoratorFactory.prototype = Object.create(parentClass.prototype);
      }
  
-     PropDecoratorFactory.prototype.ngMetadataName = name;
+     PropDecoratorFactory.prototype.metadataName = name;
      (<any>PropDecoratorFactory).annotationCls = PropDecoratorFactory;
      return PropDecoratorFactory;
    });

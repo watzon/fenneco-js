@@ -1,5 +1,7 @@
+import { performance } from 'perf_hooks'
 import prompts from 'prompts';
 import { TelegramClient } from 'telegram';
+import { ParseInterface } from 'telegram/client/messageParse';
 import { TelegramClientParams } from 'telegram/client/telegramBaseClient';
 import { Session, StringSession } from 'telegram/sessions';
 import { makeDecorator, Type, TypeDecorator } from '.';
@@ -18,6 +20,7 @@ export interface BotMeta {
     session?: Session | string
     plugins?: any[]
     autostart?: boolean
+    parseMode?: ParseInterface | 'md' | 'markdown' | 'html' | undefined
 }
 
 export interface Authenticatable {
@@ -29,8 +32,17 @@ export interface Authenticatable {
 
 export class BotBase {
     private _client: TelegramClient
+    private _startTime: number
 
     public plugins: Map<typeof PluginBase, PluginBase> = new Map()
+
+    public init() {
+        this._startTime = performance.now()
+    }
+
+    public get uptime() {
+        return performance.now() - this._startTime
+    }
 
     public get client() {
         if (!this._client)
@@ -103,8 +115,10 @@ export const Bot: BotDecorator = makeDecorator(
         const superClass = class type extends BotBase {}
         
         const client = new TelegramClient(meta.session as Session, meta.apiId, meta.apiHash, meta.clientParams || {})
+        if (meta.parseMode) client.setParseMode(meta.parseMode)
         
         const bot = new superClass()
+        bot.init()
         bot.client = client
 
         for (const plugin of meta.plugins as Array<typeof PluginBase>) {

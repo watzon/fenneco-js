@@ -1,3 +1,4 @@
+import { TelegramClient } from "telegram";
 import { EntityLike } from "telegram/define";
 import { NewMessage, NewMessageEvent } from "telegram/events";
 import { makePropDecorator, Type } from ".";
@@ -12,13 +13,19 @@ export interface OnMessageDecorator {
 
 export interface OnMessageMeta {
     chats?: EntityLike[];
-    func?: CallableFunction;
+    func?: (event: NewMessageEvent) => boolean;
     incoming?: boolean;
     outgoing?: boolean;
     fromUsers?: EntityLike[];
     forwards?: boolean;
     pattern?: string | RegExp;
     blacklistChats?: boolean;
+}
+
+export interface OnMessageParams {
+    bot: BotBase
+    client: TelegramClient
+    event: NewMessageEvent
 }
 
 export const OnMessage: OnMessageDecorator = makePropDecorator(

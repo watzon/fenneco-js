@@ -11,6 +11,7 @@
     "@types/express": "^4.17.12",
     "@types/node": "^16.0.0",
     "@types/prompts": "^2.0.13",
+    "@types/underscore": "^1.11.3",
     "@typescript-eslint/eslint-plugin": "^4.15.2",
     "@typescript-eslint/parser": "^4.15.2",
     "dotenv": "^10.0.0",
@@ -30,10 +31,14 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
+    "dedent": "^0.7.0",
     "express": "^4.17.1",
     "input": "^1.0.1",
     "prompts": "^2.4.1",
-    "telegram": "^1.7.7"
+    "safe-eval": "^0.4.1",
+    "stringscan": "^0.2.0",
+    "telegram": "^1.7.15",
+    "underscore": "^1.13.1"
   },
   "scripts": {
     "dev": "nodemon --config nodemon.json src/index.ts",

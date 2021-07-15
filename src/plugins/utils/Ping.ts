@@ -1,5 +1,5 @@
 import { Plugin, PluginBase } from "../../decorators/Plugin"
-import { Command } from "../../decorators/Command"
+import { Command, CommandParams } from "../../decorators/Command"
 import { performance } from 'perf_hooks'
 
 @Plugin({
@@ -11,7 +11,7 @@ export class Ping extends PluginBase {
         name: 'ping',
         outgoing: true,
     })
-    public async ping({client, event}) {
+    public async ping({ event }: CommandParams) {
         const start = performance.now()
         const msg = await event.message.reply({ message: 'PONG!' })
         if (msg) {

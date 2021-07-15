@@ -15,11 +15,22 @@ export interface PluginMeta {
 }
 
 export class PluginBase {
+    public name?: String
+    public description?: String
+    public author?: String
+
     public static __callbacks__: Map<Function, ((bot: BotBase) => void)[]> = new Map()
-    public bot: BotBase
+    private _bot: BotBase
 
     constructor(bot: BotBase) {
-        this.bot = bot
+        this._bot = bot
+        // this.name = name
+        // this.description = description
+        // this.author = author
+    }
+
+    public get bot() {
+        return this._bot
     }
 
     public __register__() {
@@ -35,10 +46,11 @@ export class PluginBase {
 
         PluginBase.__callbacks__.get(plugin).push(callback)
     }
+}
 
-    public __unregister__() {
-
-    }
+export class PluginCallback {
+    private _pluginCls: object
+    private _callback: () => any
 }
 
 export const Plugin: PluginDecorator = makeDecorator(
