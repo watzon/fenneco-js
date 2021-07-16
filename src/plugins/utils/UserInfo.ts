@@ -1,9 +1,7 @@
-import dedent from 'dedent'
-import { Plugin, PluginBase } from "../../decorators/Plugin"
-import { Arg, Command, CommandParams } from "../../decorators/Command"
+import { Plugin, PluginBase, Command, CommandParams, Arg } from "cracker"
+import { Bold, Code, KeyValueItem, Mention, Section, SubSection } from 'cracker/src/htmlBuilder'
 import { Message } from "telegram/tl/custom/message"
 import { Api } from "telegram/tl"
-import { Bold, Code, KeyValueItem, Mention, Section, SubSection } from '../../decorators/HTMLBuilder'
 
 @Plugin({
     name: 'UserInfo',
@@ -23,15 +21,20 @@ export class UserInfo extends PluginBase {
         @Arg('bot', { type: Boolean }) bot: boolean = false,
         @Arg('misc', { type: Boolean }) misc: boolean = false,
         @Arg('search', { type: Boolean }) search: boolean = false,
-        @Arg('forward', { type: Boolean }) forward: boolean = true,
+        @Arg('forward', { type: Boolean }) forward: boolean = false,
         @Arg('mention', { type: Boolean }) mention: boolean = false,
     ) {
         const { message } = event
         const replyMessage = await message.getReplyMessage().catch(() => null)
         let entity
 
-        if (text && !isNaN(text as any)) entity = Number(text)
-        else if (replyMessage) {
+        if (text && text.trim() !== '') {
+            if (text.startsWith('@')) {
+                entity = text
+            } else if (!isNaN(text as any)) {
+                entity = Number(text)
+            }
+        } else if (replyMessage) {
             const reply = replyMessage as Message
             const forwardHeader = reply.forward as unknown as Api.MessageFwdHeader
             if (forward && forwardHeader) {

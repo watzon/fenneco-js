@@ -1,6 +1,5 @@
-import { Plugin, PluginBase } from "../../decorators/Plugin"
-import { Command, CommandParams } from "../../decorators/Command"
-import { Bold, Code, KeyValueItem, Section } from "../../decorators/HTMLBuilder"
+import { Plugin, PluginBase, Command, CommandParams } from "cracker"
+import { Bold, Code, KeyValueItem, Section } from "cracker/src/htmlBuilder"
 import { version } from '../../../package.json'
 import { execSync } from 'child_process'
 

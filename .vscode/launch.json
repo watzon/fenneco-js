@@ -6,7 +6,8 @@
         "request": "attach",
         "name": "Attach",
         "restart": true,
-        "processId": "${command:PickProcess}"
+        "processId": "${command:PickProcess}",
+        "stopOnEntry": false,
       }
     ]
   }

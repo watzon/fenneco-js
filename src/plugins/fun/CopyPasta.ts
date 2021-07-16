@@ -1,6 +1,5 @@
 import { random, sample } from 'underscore'
-import { Plugin, PluginBase } from '../../decorators/Plugin'
-import { Command, CommandParams } from '../../decorators/Command'
+import { Plugin, PluginBase, Command, CommandParams } from 'cracker'
 
 const EMOJIS = [
     '😂', '👌', '😂', '✌', '💞', '👍', '👌', '💯', '🎶', '👀', '😂', '👓', '👏', '👐', '🍕',

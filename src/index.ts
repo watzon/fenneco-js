@@ -1,22 +1,17 @@
-import './decorators/typeExtensions'
+import { Bot } from 'cracker'
 import { StoreSession } from 'telegram/sessions'
-import { Bot } from './decorators/Bot'
-import { About, Eval, Ping, UserInfo } from './plugins/utils'
-import { CopyPasta, Mock } from './plugins/fun'
+import * as Utils from './plugins/utils'
+import * as Fun from './plugins/fun'
 
 try {
   require('dotenv').config()
-} catch (e: any) {
-  console.log(e)
-}
+} catch (e: any) { }
 
 @Bot({
   apiId: Number(process.env.API_ID!),
   apiHash: process.env.API_HASH!,
   session: new StoreSession('fenneco'),
-  plugins: [Ping, CopyPasta, Mock, UserInfo, Eval, About],
+  plugins: [...Object.values(Utils), ...Object.values(Fun)],
   parseMode: 'html',
 })
-export class Fenneco {
-  
-}
+export class Fenneco { }

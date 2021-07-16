@@ -1,5 +1,4 @@
-import { Plugin, PluginBase } from "../../decorators/Plugin"
-import { Command, CommandParams } from "../../decorators/Command"
+import { Plugin, PluginBase, Command, CommandParams } from "cracker"
 import { performance } from 'perf_hooks'
 
 @Plugin({
